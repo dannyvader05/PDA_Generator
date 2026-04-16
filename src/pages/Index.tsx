@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useDarkMode } from '@/hooks/use-dark-mode';
 import { parseCFG, cfgToString } from '@/lib/cfg-parser';
 import { convertCFGtoPDA, PDA, ConversionStep } from '@/lib/cfg-to-pda';
 import { simulatePDA, SimulationResult } from '@/lib/pda-simulator';
