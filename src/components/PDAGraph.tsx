@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { PDA } from '@/lib/cfg-to-pda';
 
 interface Props {
@@ -12,17 +13,20 @@ interface NodePos {
   y: number;
 }
 
-export default function PDAGraph({ pda, highlightState, highlightTransition }: Props) {
-  const layout = useMemo(() => {
-    const positions: Record<string, NodePos> = {
-      'q_start': { x: 100, y: 150 },
-      'q_loop': { x: 320, y: 150 },
-      'q_accept': { x: 540, y: 150 },
-    };
-    return positions;
-  }, []);
+const stateDisplayName = (state: string) => {
+  if (state === 'q_start') return 'q₀';
+  if (state === 'q_loop') return 'q₁';
+  if (state === 'q_accept') return 'q₂';
+  return state;
+};
 
-  // Group transitions by (from, to) for label stacking
+export default function PDAGraph({ pda, highlightState, highlightTransition }: Props) {
+  const layout = useMemo<Record<string, NodePos>>(() => ({
+    'q_start': { x: 100, y: 150 },
+    'q_loop': { x: 320, y: 150 },
+    'q_accept': { x: 540, y: 150 },
+  }), []);
+
   const groupedTransitions = useMemo(() => {
     const groups = new Map<string, string[]>();
     for (const t of pda.transitions) {
@@ -44,8 +48,23 @@ export default function PDAGraph({ pda, highlightState, highlightTransition }: P
           <polygon points="0 0, 8 3, 0 6" className="fill-muted-foreground" />
         </marker>
         <marker id="arrowhead-active" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-          <polygon points="0 0, 8 3, 0 6" className="fill-info" />
+          <polygon points="0 0, 8 3, 0 6" fill="hsl(var(--info))" />
         </marker>
+        {/* Glow filter for active elements */}
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        <filter id="edgeGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="2.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
       </defs>
 
       {/* Edges */}
@@ -56,35 +75,38 @@ export default function PDAGraph({ pda, highlightState, highlightTransition }: P
         if (!fromPos || !toPos) return null;
         const active = isHighlightedEdge(from, to);
 
-        // Self-loop
         if (from === to) {
           const cx = fromPos.x;
           const cy = fromPos.y - 30;
           return (
-            <g key={key}>
-              <path
+            <g key={key} filter={active ? 'url(#edgeGlow)' : undefined}>
+              <motion.path
                 d={`M ${cx - 18} ${cy - 4} C ${cx - 30} ${cy - 60}, ${cx + 30} ${cy - 60}, ${cx + 18} ${cy - 4}`}
                 fill="none"
-                className={active ? 'stroke-info' : 'stroke-muted-foreground/50'}
-                strokeWidth={active ? 2 : 1.5}
+                stroke={active ? 'hsl(var(--info))' : 'hsl(var(--muted-foreground) / 0.35)'}
+                strokeWidth={active ? 2.5 : 1.5}
                 markerEnd={active ? 'url(#arrowhead-active)' : 'url(#arrowhead)'}
+                animate={{ strokeWidth: active ? [2, 3, 2] : 1.5 }}
+                transition={active ? { duration: 1.2, repeat: Infinity } : {}}
               />
               {labels.map((label, i) => (
-                <text
+                <motion.text
                   key={i}
                   x={cx}
                   y={cy - 58 - i * 14}
                   textAnchor="middle"
-                  className={`text-[9px] font-mono ${active ? 'fill-info' : 'fill-muted-foreground'}`}
+                  className="text-[9px] font-mono"
+                  fill={active ? 'hsl(var(--info))' : 'hsl(var(--muted-foreground))'}
+                  animate={active ? { opacity: [0.7, 1, 0.7] } : {}}
+                  transition={active ? { duration: 1.5, repeat: Infinity } : {}}
                 >
                   {label}
-                </text>
+                </motion.text>
               ))}
             </g>
           );
         }
 
-        // Straight edge
         const dx = toPos.x - fromPos.x;
         const dy = toPos.y - fromPos.y;
         const len = Math.sqrt(dx * dx + dy * dy);
@@ -98,53 +120,65 @@ export default function PDAGraph({ pda, highlightState, highlightTransition }: P
         const midY = (startY + endY) / 2 - 10;
 
         return (
-          <g key={key}>
-            <line
+          <g key={key} filter={active ? 'url(#edgeGlow)' : undefined}>
+            <motion.line
               x1={startX} y1={startY} x2={endX} y2={endY}
-              className={active ? 'stroke-info' : 'stroke-muted-foreground/50'}
-              strokeWidth={active ? 2 : 1.5}
+              stroke={active ? 'hsl(var(--info))' : 'hsl(var(--muted-foreground) / 0.35)'}
+              strokeWidth={active ? 2.5 : 1.5}
               markerEnd={active ? 'url(#arrowhead-active)' : 'url(#arrowhead)'}
+              animate={{ strokeWidth: active ? [2, 3, 2] : 1.5 }}
+              transition={active ? { duration: 1.2, repeat: Infinity } : {}}
             />
             {labels.map((label, i) => (
-              <text
+              <motion.text
                 key={i}
                 x={midX}
                 y={midY - i * 13}
                 textAnchor="middle"
-                className={`text-[9px] font-mono ${active ? 'fill-info' : 'fill-muted-foreground'}`}
+                className="text-[9px] font-mono"
+                fill={active ? 'hsl(var(--info))' : 'hsl(var(--muted-foreground))'}
+                animate={active ? { opacity: [0.7, 1, 0.7] } : {}}
+                transition={active ? { duration: 1.5, repeat: Infinity } : {}}
               >
                 {label}
-              </text>
+              </motion.text>
             ))}
           </g>
         );
       })}
 
-      {/* Entry arrow for start state */}
+      {/* Entry arrow */}
       <line
         x1={30} y1={150} x2={70} y2={150}
         className="stroke-muted-foreground/50"
         strokeWidth={1.5}
         markerEnd="url(#arrowhead)"
       />
+      <text x={50} y={140} textAnchor="middle" className="text-[9px] fill-muted-foreground font-mono">start</text>
 
       {/* Nodes */}
       {pda.states.map(state => {
         const pos = layout[state];
         if (!pos) return null;
         const isAccept = pda.acceptStates.includes(state);
-        const isStart = state === pda.startState;
         const isActive = highlightState === state;
 
         return (
           <g key={state}>
-            {/* Glow for active state */}
+            {/* Animated glow ring for active state */}
             {isActive && (
-              <circle cx={pos.x} cy={pos.y} r={32}
-                className="fill-info/20"
+              <motion.circle
+                cx={pos.x} cy={pos.y} r={34}
+                fill="none"
+                stroke="hsl(var(--info))"
+                strokeWidth={2}
+                filter="url(#glow)"
+                initial={{ r: 28, opacity: 0 }}
+                animate={{ r: [32, 38, 32], opacity: [0.6, 0.2, 0.6] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
               />
             )}
-            {/* Outer ring for accept states */}
+            {/* Accept double ring */}
             {isAccept && (
               <circle cx={pos.x} cy={pos.y} r={28}
                 className="fill-none stroke-primary"
@@ -152,12 +186,14 @@ export default function PDAGraph({ pda, highlightState, highlightTransition }: P
               />
             )}
             {/* Main circle */}
-            <circle
+            <motion.circle
               cx={pos.x} cy={pos.y} r={24}
-              className={`
-                ${isActive ? 'fill-info/20 stroke-info' : isStart ? 'fill-info/10 stroke-info' : 'fill-card stroke-border'}
-              `}
+              fill={isActive ? 'hsl(var(--info) / 0.15)' : 'hsl(var(--card))'}
+              stroke={isActive ? 'hsl(var(--info))' : 'hsl(var(--border))'}
               strokeWidth={isActive ? 2.5 : 2}
+              animate={isActive ? { scale: [1, 1.06, 1] } : { scale: 1 }}
+              transition={isActive ? { duration: 0.8, repeat: Infinity, ease: 'easeInOut' } : {}}
+              style={{ transformOrigin: `${pos.x}px ${pos.y}px` }}
             />
             {/* Label */}
             <text
@@ -166,7 +202,7 @@ export default function PDAGraph({ pda, highlightState, highlightTransition }: P
               dominantBaseline="middle"
               className={`text-[11px] font-mono font-bold ${isActive ? 'fill-info' : 'fill-foreground'}`}
             >
-              {state.replace('q_', 'q₀').replace('q₀loop', 'q₁').replace('q₀accept', 'q₂').replace('q₀start', 'q₀')}
+              {stateDisplayName(state)}
             </text>
             {/* State name below */}
             <text
