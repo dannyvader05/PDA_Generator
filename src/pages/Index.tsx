@@ -20,6 +20,7 @@ const EXAMPLE_CFGS = [
 type Tab = 'convert' | 'simulate';
 
 export default function Index() {
+  const [dark, setDark] = useDarkMode();
   const [cfgInput, setCfgInput] = useState(EXAMPLE_CFGS[0].value);
   const [pda, setPda] = useState<PDA | null>(null);
   const [steps, setSteps] = useState<ConversionStep[]>([]);
