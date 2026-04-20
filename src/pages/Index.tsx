@@ -9,6 +9,7 @@ import ConversionSteps from '@/components/ConversionSteps';
 import SimulationView from '@/components/SimulationView';
 import TheorySection from '@/components/TheorySection';
 import TransitionTable from '@/components/TransitionTable';
+import AutoPlayControls from '@/components/AutoPlayControls';
 
 const EXAMPLE_CFGS = [
   { name: 'aⁿbⁿ', value: 'S -> aSb | ε' },
