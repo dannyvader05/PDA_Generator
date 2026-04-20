@@ -237,25 +237,11 @@ export default function Index() {
                         <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
                           Conversion Steps
                         </span>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-                            disabled={currentStep === 0}
-                            className="px-3 py-1.5 text-xs font-medium rounded-md bg-muted border border-border text-foreground disabled:opacity-25 hover:bg-secondary transition-colors active:scale-95"
-                          >
-                            ← Prev
-                          </button>
-                          <span className="text-xs text-muted-foreground font-mono min-w-[40px] text-center">
-                            {currentStep + 1}/{steps.length}
-                          </span>
-                          <button
-                            onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
-                            disabled={currentStep >= steps.length - 1}
-                            className="px-3 py-1.5 text-xs font-medium rounded-md bg-muted border border-border text-foreground disabled:opacity-25 hover:bg-secondary transition-colors active:scale-95"
-                          >
-                            Next →
-                          </button>
-                        </div>
+                        <AutoPlayControls
+                          currentStep={currentStep}
+                          totalSteps={steps.length}
+                          onStep={setCurrentStep}
+                        />
                       </div>
                       <ConversionSteps steps={steps} currentStep={currentStep} />
                     </div>
