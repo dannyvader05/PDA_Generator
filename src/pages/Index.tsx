@@ -318,25 +318,11 @@ export default function Index() {
                           <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
                             Simulation Trace
                           </span>
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => setSimStep(Math.max(0, simStep - 1))}
-                              disabled={simStep === 0}
-                              className="px-3 py-1.5 text-xs font-medium rounded-md bg-muted border border-border text-foreground disabled:opacity-25 hover:bg-secondary transition-colors active:scale-95"
-                            >
-                              ← Prev
-                            </button>
-                            <span className="text-xs text-muted-foreground font-mono min-w-[40px] text-center">
-                              {simStep + 1}/{simResult.snapshots.length}
-                            </span>
-                            <button
-                              onClick={() => setSimStep(Math.min(simResult.snapshots.length - 1, simStep + 1))}
-                              disabled={simStep >= simResult.snapshots.length - 1}
-                              className="px-3 py-1.5 text-xs font-medium rounded-md bg-muted border border-border text-foreground disabled:opacity-25 hover:bg-secondary transition-colors active:scale-95"
-                            >
-                              Next →
-                            </button>
-                          </div>
+                          <AutoPlayControls
+                            currentStep={simStep}
+                            totalSteps={simResult.snapshots.length}
+                            onStep={setSimStep}
+                          />
                         </div>
                         <SimulationView
                           snapshots={simResult.snapshots}
